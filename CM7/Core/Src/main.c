@@ -33,7 +33,7 @@ typedef StaticTask_t osStaticThreadDef_t;
 extern uint32_t *g_pfnVectors;
 
 // MEP LTDC Buffer placed into SDRAM
-static uint32_t ltdc_buffer[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/1]__attribute__ (( section(".SDRAM_data"), used)) = {0};
+static uint32_t ltdc_buffer[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/2]__attribute__ (( section(".SDRAM_data"), used)) = {0};
 uint32_t ltdc_buffer_addr(void)
 {
   return (uint32_t)&ltdc_buffer[0];
@@ -512,10 +512,10 @@ static void MX_DMA2D_Init(void)
   /* USER CODE END DMA2D_Init 1 */
   hdma2d.Instance = DMA2D;
   hdma2d.Init.Mode = DMA2D_M2M;
-  hdma2d.Init.ColorMode = DMA2D_OUTPUT_ARGB8888;
+  hdma2d.Init.ColorMode = DMA2D_OUTPUT_RGB565;
   hdma2d.Init.OutputOffset = 0;
   hdma2d.LayerCfg[1].InputOffset = 0;
-  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_ARGB8888;
+  hdma2d.LayerCfg[1].InputColorMode = DMA2D_INPUT_RGB565;
   hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
   hdma2d.LayerCfg[1].InputAlpha = 0;
   hdma2d.LayerCfg[1].AlphaInverted = DMA2D_REGULAR_ALPHA;
@@ -708,7 +708,7 @@ static void MX_LTDC_Init(void)
   pLayerCfg.WindowX1 = 800;
   pLayerCfg.WindowY0 = 0;
   pLayerCfg.WindowY1 = 480;
-  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_ARGB8888;
+  pLayerCfg.PixelFormat = LTDC_PIXEL_FORMAT_RGB565;
   pLayerCfg.Alpha = 255;
   pLayerCfg.Alpha0 = 0;
   pLayerCfg.BlendingFactor1 = LTDC_BLENDING_FACTOR1_CA;
@@ -1059,7 +1059,7 @@ void LVGLTimer(void *argument)
   for(;;)
   {
      lv_timer_handler();   // 1 tick ~ 1ms (for 1000Hz RTOS main timer)
-	 osDelay(10);         // range 5-10ms, 16 ~ 60FPS
+	 osDelay(16);         // range 5-10ms, 16 ~ 60FPS
   }
 }
 /* LVGL tick source */

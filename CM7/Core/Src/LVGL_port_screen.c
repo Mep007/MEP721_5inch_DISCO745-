@@ -20,8 +20,8 @@ static lv_disp_draw_buf_t 	disp_buf;
  **********************/
 //#define LVGL_BUFFER_1_ADDR_AT_SDRAM	SDRAM_DEVICE_ADDR + 2 * (MY_DISP_HOR_RES * MY_DISP_VER_RES)      // RGB565 ( ex. 800x480 x2bytes/per pixel = 768kB/per buffer)
 //#define LVGL_BUFFER_2_ADDR_AT_SDRAM	SDRAM_DEVICE_ADDR + 4 * (MY_DISP_HOR_RES * MY_DISP_VER_RES)      //
-static volatile uint32_t buf1[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/1]__attribute__ (( section(".SDRAM_data"), used)) = {0};
-static volatile uint32_t buf2[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/1]__attribute__ (( section(".SDRAM_data"), used)) = {0};
+static volatile uint32_t buf1[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/2]__attribute__ (( section(".SDRAM_data"), used)) = {0};
+static volatile uint32_t buf2[(MY_DISP_HOR_RES*MY_DISP_VER_RES)/2]__attribute__ (( section(".SDRAM_data"), used)) = {0};
 
 
 /**********************
@@ -70,7 +70,8 @@ static void disp_flush (lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *c
 
   SCB_CleanDCache_by_Addr((uint32_t*)color_p, width * height * 4);
   //SCB_CleanInvalidateDCache();         // cisti a inicializuje celou cache, muze byt pomale
-
+  // setup pro ARGB888 - ale pomale
+  /*
   DMA2D->FGPFCCR = DMA2D_INPUT_ARGB8888;
   DMA2D->CR = 0x0U << DMA2D_CR_MODE_Pos;    // no conversion ORIG
   DMA2D->FGMAR = (uint32_t)color_p;
@@ -78,6 +79,14 @@ static void disp_flush (lv_disp_drv_t *drv, const lv_area_t *area, lv_color_t *c
   DMA2D->OPFCCR = DMA2D_OUTPUT_ARGB8888;
   DMA2D->OMAR = hltdc.LayerCfg[0].FBStartAdress + 4 * \
                 (area->y1 * MY_DISP_HOR_RES + area->x1);
+  */
+  DMA2D->FGPFCCR = DMA2D_INPUT_RGB565;
+  DMA2D->CR = 0x0U << DMA2D_CR_MODE_Pos;    // no conversion ORIG
+  DMA2D->FGMAR = (uint32_t)color_p;
+  DMA2D->FGOR = 0;
+  DMA2D->OPFCCR = DMA2D_OUTPUT_RGB565;
+  DMA2D->OMAR = hltdc.LayerCfg[0].FBStartAdress + 2 * \
+                (area->y1 * MY_DISP_HOR_RES + area->x1);       // *2 (RGB565) nebo *4 ARGB8888
   DMA2D->OOR = MY_DISP_HOR_RES - width;
   DMA2D->NLR = (width << DMA2D_NLR_PL_Pos) | (height << DMA2D_NLR_NL_Pos);
   DMA2D->IFCR = 0x3FU;
