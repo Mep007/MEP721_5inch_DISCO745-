@@ -86,21 +86,22 @@ const osThreadAttr_t defaultTask_attributes = {
   .cb_size = sizeof(defaultTaskControlBlock),
   .stack_mem = &defaultTaskBuffer[0],
   .stack_size = sizeof(defaultTaskBuffer),
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNone,
 };
 /* USER CODE BEGIN PV */
+/*
 osThreadId_t lvglTickHandle;
 const osThreadAttr_t lvglTick_attributes = {
   .name = "lvglTick",
   .priority = (osPriority_t) osPriorityNormal,
   .stack_size = 4096
 };
-
+*/
 osThreadId_t lvglTimerHandle;
 const osThreadAttr_t lvglTimer_attributes = {
   .name = "lvglTimer",
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 4096
+  .stack_size = 4096 * 4
 };
 
 /*
@@ -312,6 +313,9 @@ Error_Handler();
 
   /* initialize LVGL framework */
   lv_init();
+
+  lv_tick_set_cb(HAL_GetTick);
+
   lvgl_display_init();
   lvgl_touchscreen_init();
 
@@ -319,7 +323,7 @@ Error_Handler();
   lv_demo_widgets();
    //lv_demo_keypad_encoder();
    //lv_demo_music();
-  // lv_demo_benchmark();
+   //lv_demo_benchmark();
 
   /* USER CODE END 2 */
 
@@ -348,7 +352,7 @@ Error_Handler();
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  lvglTickHandle 		= osThreadNew(LVGLTick, NULL, &lvglTick_attributes);
+ // lvglTickHandle 		= osThreadNew(LVGLTick, NULL, &lvglTick_attributes);
   lvglTimerHandle 		= osThreadNew(LVGLTimer, NULL, &lvglTimer_attributes);
   //taskMonitorHandle 	= osThreadNew(TaskMonitor, NULL, &taskMonitor_attributes);
 
@@ -1059,19 +1063,20 @@ void LVGLTimer(void *argument)
   for(;;)
   {
      lv_timer_handler();   // 1 tick ~ 1ms (for 1000Hz RTOS main timer)
-	 osDelay(16);         // range 5-10ms, 16 ~ 60FPS
+	 osDelay(15);         // range 5-10ms, 16 ~ 60FPS
   }
 }
 /* LVGL tick source */
+/*
 void LVGLTick(void *argument)
 {
   for(;;)
   {
-    lv_tick_inc(2);   // range 10ms
-    osDelay(2);
+  //  lv_tick_inc(2);   // range 10ms
+    osDelay(2000);
   }
 }
-
+*/
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -1098,7 +1103,7 @@ void StartDefaultTask(void *argument)
 
 	  if ((deftim % 25) == 0)  // run every 25ms
 	  {
-		  print_touch_pos_VT100((uint16_t)TS_StateList.TouchX,(uint16_t)TS_StateList.TouchY);
+		//  print_touch_pos_VT100((uint16_t)TS_StateList.TouchX,(uint16_t)TS_StateList.TouchY);
 		  press = HAL_GPIO_ReadPin(INT_TOUCH_GPIO_Port, INT_TOUCH_Pin);       // if touched => log0
 		  printf("\033[5;0HINT_TOUCH (PG2): %d\n", press); //
 		  printf("\033[7;0HUSR_BUT (PC13): %d\n", HAL_GPIO_ReadPin(BUT_USR_GPIO_Port, BUT_USR_Pin)); //
@@ -1107,7 +1112,7 @@ void StartDefaultTask(void *argument)
 		  BSP_LED_Toggle(LED_GREEN);
 	  }
 
-	  osDelay(1);
+	  osDelay(10);
    }
   /* USER CODE END 5 */
 }
